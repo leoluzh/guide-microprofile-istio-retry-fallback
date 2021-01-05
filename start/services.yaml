@@ -81,3 +81,13 @@ spec:
         image: inventory:1.0-SNAPSHOT
         ports:
         - containerPort: 9081
+        envFrom:
+        - configMapRef:
+            name: inventory-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inventory-config
+data:
+  MP_Fault_Tolerance_NonFallback_Enabled: "false"

@@ -52,6 +52,8 @@ public class InventoryResource {
   @GET
   @Path("/{hostname}")
   @Produces(MediaType.APPLICATION_JSON)
+  @Fallback( fallbackMethod = "getPropertiesFallback" )
+  @Retry( maxRetries = 3 , retryOn = WebApplicationException.class )
   public Response getPropertiesForHost(@PathParam("hostname") String hostname) 
          throws WebApplicationException, ProcessingException, UnknownUrlException {
     
@@ -60,6 +62,7 @@ public class InventoryResource {
     Properties props = null;
     try {
         customURL = new URL(customURLString);
+        //dynamic (url) rest client call ...
         SystemClient systemClient = RestClientBuilder.newBuilder()
                 .baseUrl(customURL)
                 .register(UnknownUrlExceptionMapper.class)
@@ -79,6 +82,16 @@ public class InventoryResource {
 
     manager.add(hostname, props);
     return Response.ok(props).build();
+  }
+  
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getPropertiesFallback( @PathParam("hostname") String hostname ) {
+	  Properties props = new Properties();
+	  props.put("error", "Unknown hostname or the system service may not be running." );
+	  return Response
+			  .ok( props )
+			  .header("X-From-Fallback", "yes" )
+			  .build();
   }
   
   @GET
